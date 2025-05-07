@@ -1,0 +1,38 @@
+from picamera2 import Picamera2, Preview
+import time
+import os
+
+# === Initialize Camera ===
+cam = Picamera2()
+
+# Optional: Choose camera configuration
+config = cam.create_still_configuration()
+cam.configure(config)
+
+# Start the camera preview (can be disabled if headless)
+cam.start_preview(Preview.QTGL)
+cam.start()
+
+# Allow autofocus to settle
+print("Camera starting up...")
+time.sleep(2)
+
+# === Autofocus (optional, works only if supported) ===
+try:
+    cam.set_controls({"AfMode": 2})  # Continuous autofocus
+    time.sleep(1)
+    cam.set_controls({"AfTrigger": 0})  # Trigger autofocus
+    print("Autofocus triggered.")
+except Exception as e:
+    print("Autofocus not available:", e)
+
+# === Capture Image ===
+timestamp = int(time.time())
+filename = f"capture_{timestamp}.jpg"
+save_path = os.path.join("/home/pi/Pictures", filename)
+
+cam.capture_file(save_path)
+print(f"Image saved at: {save_path}")
+
+cam.stop_preview()
+cam.close()
